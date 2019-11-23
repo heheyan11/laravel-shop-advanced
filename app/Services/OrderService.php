@@ -139,12 +139,12 @@ class OrderService
     public function seckill(User $user, UserAddress $address, ProductSku $sku)
     {
         $order = \DB::transaction(function () use ($user, $address, $sku) {
-            // 更新此地址的最后使用时间
-            $address->update(['last_used_at' => Carbon::now()]);
+//            // 更新此地址的最后使用时间
+//            $address->update(['last_used_at' => Carbon::now()]);
             // 扣减对应 SKU 库存
-            if ($sku->decreaseStock(1) <= 0) {
-                throw new InvalidRequestException('该商品库存不足');
-            }
+//            if ($sku->decreaseStock(1) <= 0) {
+////                throw new InvalidRequestException('该商品库存不足');
+////            }
             // 创建一个订单
             $order = new Order([
                 'address'      => [ // 将地址信息放入订单中
@@ -170,6 +170,7 @@ class OrderService
             $item->productSku()->associate($sku);
             $item->save();
 
+            \Redis::decr('seckill_sku_'.$sku->id);
             return $order;
         });
         // 秒杀订单的自动关闭时间与普通订单不同
